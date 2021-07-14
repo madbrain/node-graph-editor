@@ -1,13 +1,12 @@
 {
   "name": "@madbrain/node-graph-editor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/node-graph-editor.cjs.js",
   "module": "dist/node-graph-editor.esm.js",
   "browser": "dist/node-graph-editor.umd.js",
   "types": "dist/node-graph-editor.d.ts",
-  "dependencies": {},
   "publishConfig": {
-    "registry":"https://npm.pkg.github.com"
+    "registry": "https://npm.pkg.github.com"
   },
   "repository": {
     "url": "https://github.com/madbrain/node-graph-editor"
