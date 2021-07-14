@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Demo</title>
+    <link href="../src/graph-editor/editor.css" rel="stylesheet">
+    <link href="../src/image-kit/image-kit.css" rel="stylesheet">
+    <style>
+      *, html, body {
+        padding: 0;
+        margin: 0;
+      }
+      #container {
+        width: 100vw;
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+    </div>
+    <script src="../dist/node-graph-editor.umd.js"></script>
+    <script>
+      // Create and customize editor
+      const graphicalHelper = new nodeGraphUi.GeglGraphicalHelper();
+      const nodeFactory = new nodeGraphUi.NodeFactory(nodeGraphUi.geglNodeDefinitions);
+      
+      let editor = new nodeGraphUi.GraphEditor({
+        container: document.querySelector("#container"),
+        graphicalHelper,
+        nodeFactory
+      });
+      editor.registerSelector("select-color", new nodeGraphUi.ColorSelector());
+      editor.onGraphChange(nodeGroup => {
+        console.log("GRAPH CHANGE", nodeGroup);
+      });
+
+      // Set graph to edit
+      const graph = {
+        nodes: [
+          { id: "n0", type: "gegl:png-load", location: { x: 100, y: 100} },
+          { id: "n1", type: "gimp:colorize", location: { x: 400, y: 100},
+            properties: { "color": { r: 128, g: 53, b: 96 } } },
+          { id: "n2", type: "gegl:png-save", location: { x: 700, y: 100} },
+        ],
+        connections: [
+          { from: { node: "n0", property: "output"}, to: { node: "n1", property: "input" } },
+          { from: { node: "n1", property: "output"}, to: { node: "n2", property: "input" } },
+        ],
+        canvas: {
+          position: { x: 0, y: 0 },
+          zoom: 1.0
+        }
+      }
+      editor.load(graph);
+      console.log(editor.save());
+
+      // Update previews
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0, img.width, img.height);
+        const imageData = ctx.getImageData(0, 0, img.width, img.height);
+        const args = {};
+        args["n0"] = imageData;
+        editor.updatePreviews(args);
+      };
+      img.src = "cat.png";
+    </script>
+  </body>
+</html>
