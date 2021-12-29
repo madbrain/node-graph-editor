@@ -87,22 +87,22 @@ describe("Rectangle", () => {
 
     it("get middleRight", () => {
         const point = new Rectangle(10, 20, 30, 40).middleRight();
-        expect(point).toEqual(new Point(40, 30));
+        expect(point).toEqual(new Point(40, 40));
     });
 
     it("get middleLeft", () => {
         const point = new Rectangle(10, 20, 30, 40).middleLeft();
-        expect(point).toEqual(new Point(10, 30));
+        expect(point).toEqual(new Point(10, 40));
     });
 
     it("get middleTop", () => {
         const point = new Rectangle(10, 20, 30, 40).middleTop();
-        expect(point).toEqual(new Point(20, 20));
+        expect(point).toEqual(new Point(25, 20));
     });
 
     it("get middleBottom", () => {
         const point = new Rectangle(10, 20, 30, 40).middleBottom();
-        expect(point).toEqual(new Point(20, 60));
+        expect(point).toEqual(new Point(25, 60));
     });
 
     it("expand", () => {
