@@ -1,6 +1,6 @@
 {
   "name": "@madbrain/node-graph-editor",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "main": "dist/node-graph-editor.cjs.js",
   "module": "dist/node-graph-editor.esm.js",
   "browser": "dist/node-graph-editor.umd.js",
