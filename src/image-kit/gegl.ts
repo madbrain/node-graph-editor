@@ -38,9 +38,22 @@ function normalizeLabel(title: string, name: string) {
 }
 
 function buildPorts(ports, type: PropertyType): PropertyDefinition[] {
-    return ports.map(port => {
+    const groups = {};
+    ports.forEach(p => {
+        const result = p.match(/^([^-]*)-[0-9]+$/);
+        if (result) {
+            let count = groups[result[1]] || 0
+            groups[result[1]] = count + 1;
+        } else {
+            groups[p] = 1;
+        }
+    });
+    function multipleType(t: PropertyType) {
+        return t == PropertyType.INPUT ? PropertyType.NEW_INPUT : PropertyType.NEW_OUTPUT;
+    }
+    return Object.keys(groups).map(port => {
         return {
-            type,
+            type: groups[port] > 1 ? multipleType(type) : type,
             id: port,
             label: port,
             linkable: true,
@@ -124,6 +137,19 @@ function buildDefinitions(): NodeDefinition[] {
                 .concat(buildProperties(operation.properties)),
             preview: buildPreview(operation)
         });
+    }).concat({
+        id: "ratatest",
+        label: "Rata Test",
+        categories: "test",
+        properties: [{
+            type: PropertyType.NEW_OUTPUT,
+            id: "output",
+            label: "Output",
+            linkable: true,
+            editable: true,
+            valueType: { type: CommonValueType.LABEL }
+        }],
+        preview: false
     });
 }
 
@@ -180,12 +206,15 @@ export class GeglGraphicalHelper implements GraphicalHelper {
         if (valueDef.type == GeglValueType.IMAGE) {
             return { r: 0xc7, g: 0xc7, b: 0x29 };
         }
-        /*if (valueDef.type == GeglValueType.UV) {
-            return { r: 0x63, g: 0x63, b: 0xc7 };
-        }
-        if (valueDef.type == GeglValueType.SHADER) {
+        // if (valueDef.type == GeglValueType.UV) {
+        //     return { r: 0x63, g: 0x63, b: 0xc7 };
+        // }
+        // if (valueDef.type == GeglValueType.SHADER) {
+        //     return { r: 0x63, g: 0xc7, b: 0x63 };
+        // }
+        if (valueDef.type == CommonValueType.LABEL) {
             return { r: 0x63, g: 0xc7, b: 0x63 };
-        }*/
+        }
         return { r: 0xa1, g: 0xa1, b: 0xa1 };
     }
 

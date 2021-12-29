@@ -391,14 +391,20 @@ export class Renderer {
         }
     }
 
-    drawConnector(position: Point, color: string) {
+    drawConnector(position: Point, color: string, isNewPort: boolean) {
         this.context.fillStyle = color;
         this.context.lineWidth = 1;
         this.context.strokeStyle = rgb(this.theme.BORDER_COLOR);
         this.context.beginPath();
         this.context.arc(position.x, position.y, this.style.connectorRadius, 0, Math.PI * 2);
         this.context.closePath();
+        if (isNewPort) {
+            this.context.globalAlpha = 0.5;
+        }
         this.context.fill();
+        if (isNewPort) {
+            this.context.globalAlpha = 1;
+        }
         this.context.stroke();
     }
 

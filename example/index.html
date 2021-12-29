@@ -26,7 +26,7 @@
       const graphicalHelper = new nodeGraphUi.GeglGraphicalHelper();
       const nodeFactory = new nodeGraphUi.NodeFactory(nodeGraphUi.geglNodeDefinitions);
       
-      let editor = new nodeGraphUi.GraphEditor({
+      const editor = new nodeGraphUi.GraphEditor({
         container: document.querySelector("#container"),
         graphicalHelper,
         nodeFactory
@@ -34,18 +34,23 @@
       editor.registerSelector("select-color", new nodeGraphUi.ColorSelector());
       editor.onGraphChange(nodeGroup => {
         console.log("GRAPH CHANGE", nodeGroup);
+        console.log("GRAPH SAVE", editor.save());
       });
 
       // Set graph to edit
       const graph = {
         nodes: [
           { id: "n0", type: "gegl:png-load", location: { x: 100, y: 100} },
-          { id: "n1", type: "gimp:colorize", location: { x: 400, y: 100},
-            properties: { "color": { r: 128, g: 53, b: 96 } } },
-          { id: "n2", type: "gegl:png-save", location: { x: 700, y: 100} },
+          { id: "n6", type: "ratatest", location: { x: 100, y: 500} },
+          { kind: "frame", label: "Test", nodes: [
+            { id: "n1", type: "gimp:colorize", location: { x: 400, y: 100}, properties: { "color": { r: 128, g: 53, b: 96 } } },
+            { id: "n2", type: "gegl:png-save", location: { x: 700, y: 100} },
+          ] },
+          { id: "n3", type: "gegl:exp-combine", location: { x: 500, y: 500}, fullWidth: 250, properties: { "exposure": { "a": "Allo?" } } },
         ],
         connections: [
           { from: { node: "n0", property: "output"}, to: { node: "n1", property: "input" } },
+          { from: { node: "n0", property: "output"}, to: { node: "n3", property: "exposure.a" } },
           { from: { node: "n1", property: "output"}, to: { node: "n2", property: "input" } },
         ],
         canvas: {
@@ -54,7 +59,6 @@
         }
       }
       editor.load(graph);
-      console.log(editor.save());
 
       // Update previews
       const img = new Image();

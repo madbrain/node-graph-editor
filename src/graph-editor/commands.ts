@@ -191,11 +191,11 @@ export class ChangePropertyValueCommand implements Command {
     }
 
     execute() {
-        this.property.value = this.newValue;
+        this.property.setValue(this.newValue);
     }
 
     undo() {
-        this.property.value = this.oldValue;
+        this.property.setValue(this.oldValue);
     }
 
     redo() {

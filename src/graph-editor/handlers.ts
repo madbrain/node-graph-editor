@@ -3,7 +3,7 @@ import { NodePropertyView } from "./views";
 import { Event, Editor, State } from "./editor-api";
 import { CommonValueType, ValueDefinition, Range } from "./value";
 import { Point, Rectangle } from "./geometry";
-import { PropertyType, NodeProperty } from "./nodes";
+import { PropertyType, NodeProperty, isOutput } from "./nodes";
 import { IdleState } from "./states";
 import { ChangePropertyValueCommand } from "./commands";
 import { buildTreeFromEnums } from "./tree";
@@ -194,6 +194,38 @@ export const stringHandler: PropertyHandler = {
     }
 };
 
+export const labelHandler = new class implements PropertyHandler {
+
+    handlerMouseDown(editor: Editor, event: Event, property: NodePropertyView): State {
+        const propBounds = property.globalBounds().shrink(editor.renderer.style.unit * 2, 0);
+        if (propBounds.contains(event.position) && property.property.parent) {
+            return openValueEditor(editor, property.globalBounds().bottomLeft(), property.property, event);
+        }
+        return new IdleState();
+    }
+
+    layout(renderer: Renderer, property: NodePropertyView) {
+        const m = renderer.context.measureText(this.getText(property));
+        property.bounds = new Point(0, 0).rect(m.width + renderer.style.unit * 3, renderer.style.unit * 4);
+    }
+
+    draw(renderer: Renderer, property: NodePropertyView) {
+        const propBounds = property.globalBounds();
+        const style = renderer.style;
+        const stringValue = this.getText(property);
+        if (isOutput(property.property.definition.type)) {
+            renderer.drawText(propBounds.topRight().offset(- style.unit * 4, style.unit * 3), rgb(renderer.theme.TEXT_COLOR), stringValue, Align.RIGHT);
+        } else {
+            renderer.drawText(propBounds.origin.offset(style.unit * 3.5, style.unit * 3), rgb(renderer.theme.TEXT_COLOR), stringValue);
+        }
+    }
+
+    getText(property: NodePropertyView) {
+        const value = property.getValue();
+        return property.property.parent && value ? value.toString() : property.property.definition.label;
+    }
+};
+
 export const enumHandler: PropertyHandler = {
     
     handlerMouseDown(editor: Editor, event: Event, property: NodePropertyView): State {
@@ -282,10 +314,10 @@ export const defaultPropertyHandler: PropertyHandler = {
     draw(renderer: Renderer, property: NodePropertyView) {
         const propBounds = property.globalBounds();
         const style = renderer.style;
-        if (property.property.definition.type == PropertyType.INPUT) {
-            renderer.drawText(propBounds.origin.offset(style.unit * 3.5, style.unit * 3), rgb(renderer.theme.TEXT_COLOR), property.property.definition.label);
-        } else {
+        if (isOutput(property.property.definition.type)) {
             renderer.drawText(propBounds.topRight().offset(- style.unit * 4, style.unit * 3), rgb(renderer.theme.TEXT_COLOR), property.property.definition.label, Align.RIGHT);
+        } else {
+            renderer.drawText(propBounds.origin.offset(style.unit * 3.5, style.unit * 3), rgb(renderer.theme.TEXT_COLOR), property.property.definition.label);
         }
     }
 }
@@ -302,6 +334,9 @@ export function getDefaultPropertyHandler(property: NodeProperty): PropertyHandl
     }
     if (property.definition.valueType.type == CommonValueType.BOOLEAN) {
         return booleanHandler;
+    }
+    if (property.definition.valueType.type == CommonValueType.LABEL) {
+        return labelHandler;
     }
     return defaultPropertyHandler;
 }

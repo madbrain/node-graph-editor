@@ -2,7 +2,6 @@ import { NodeView, NodePropertyView, ConnectionView, SelectableView, FramableVie
 import { Editor, Event, ControlKey, VisualFeedback, SelectionMode, State, KeyMapping } from "./editor-api";
 import { Point, Rectangle } from "./geometry";
 import { StyleDimension } from "./renderer";
-import { Node } from "./nodes";
 import { MoveNodeCommand as MoveNodesCommand, ToggleCollapseCommand, CreateConnectionCommand, RemoveConnectionCommand,
     CompositeCommand, AddNodeCommand, ResizeNodeCommand, DeleteNodesCommand, RenameFrameCommand } from "./commands";
 import { CommonValueType } from "./value";
@@ -179,9 +178,10 @@ class DragConnectionState extends State {
             const disconnectCommand = new RemoveConnectionCommand(this.previousConnection.connection);
             if (createCommand == null) {
                 editor.emit(disconnectCommand);
-            } else if (toProperty.property == this.previousConnection.connection.opposite(this.fromProperty.property)) {
+            } else if (toProperty.property.isRelatedTo(this.previousConnection.connection.opposite(this.fromProperty.property))) {
                 // no action actually
                 this.previousConnection.connection.connect();
+                editor.draw();
             } else {
                 editor.emit(new CompositeCommand([ disconnectCommand, createCommand ]));
             }

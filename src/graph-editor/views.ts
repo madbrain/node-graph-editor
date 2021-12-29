@@ -1,7 +1,7 @@
-import { Rectangle, Point, Dimension } from "./geometry";
+import { Rectangle, Point } from "./geometry";
 import { Renderer, rgb, Corner, Direction, StyleDimension, Align } from "./renderer";
 import { defaultPropertyHandler } from "./handlers";
-import { Node, PropertyType, NodeProperty, NodeConnection, NodeFrame, Framable } from './nodes';
+import { Node, PropertyType, NodeProperty, NodeConnection, NodeFrame, Framable, isOutput, isNewPort } from './nodes';
 import { Editor } from "./editor-api";
 
 export class ConnectionView {
@@ -52,8 +52,17 @@ export class NodePropertyView {
     }
 
     updateConnections(propertyMap: Map<NodeProperty, NodePropertyView>): void {
-        this.connections = this.property.connections.map(connection =>
-            new ConnectionView(connection, propertyMap.get(connection.from), propertyMap.get(connection.to)));
+        this.connections = this.property.connections.map(connection => {
+            const from = propertyMap.get(connection.from);
+            const to = propertyMap.get(connection.to);
+            return new ConnectionView(connection, from, to)
+        });
+    }
+
+    setBounds(bounds: Rectangle) {
+        this.bounds = bounds;
+        this.connector = this.property.definition.type == PropertyType.INPUT
+            || this.property.definition.type == PropertyType.NEW_INPUT ? bounds.middleLeft() : bounds.middleRight();
     }
 
     drawProperty(renderer: Renderer, origin: Point) {
@@ -70,17 +79,14 @@ export class NodePropertyView {
             // not editable: just the label
             defaultPropertyHandler.draw(renderer, this);
         }
-        
-        // connectors
-        if (this.property.definition.linkable) {
-            renderer.drawConnector(this.connector.add(origin), rgb(renderer.graphicalHelper.getConnectorColor(this.property)));
-        }
+        this.drawConnector(renderer, origin);
     }
 
     drawConnector(renderer: Renderer, origin: Point) {
         if (this.property.definition.linkable) {
-            const position = this.connector.add(origin);
-            renderer.drawConnector(position, rgb(renderer.graphicalHelper.getConnectorColor(this.property)));
+            renderer.drawConnector(this.connector.add(origin),
+                rgb(renderer.graphicalHelper.getConnectorColor(this.property)),
+                isNewPort(this.property.definition.type));
         }
     }
     
@@ -123,7 +129,15 @@ export class NodeView implements FramableView, SelectableView {
 
     constructor(public node: Node) {
         this.bounds = node.location.rect(0, 0);
-        this.propertyViews = node.properties.map(property => new NodePropertyView(property, this));
+        this.refreshProperties();
+    }
+
+    refreshProperties() {
+        this.propertyViews = [];
+        this.node.properties.forEach(property => {
+            property.subProperties.forEach(subProperty => this.propertyViews.push(new NodePropertyView(subProperty, this)));
+            this.propertyViews.push(new NodePropertyView(property, this));
+        });
     }
 
     moveTo(position: Point) {
@@ -133,10 +147,6 @@ export class NodeView implements FramableView, SelectableView {
 
     private updateBounds() {
         this.bounds = this.node.location.rectOf(this.bounds.dimension);
-    }
-
-    findProperty(propName: string): NodeProperty {
-        return this.node.findProperty(propName);
     }
 
     findConnector(position: Point, style: StyleDimension): NodePropertyView {
@@ -171,26 +181,25 @@ export class NodeView implements FramableView, SelectableView {
         width = Math.max(MINIMAL_NODE_WIDTH, width);
 
         let y = renderer.style.headerHeight;
-        function drawProperty(prop: NodePropertyView, i: number) {
+        function layoutProperty(prop: NodePropertyView, i: number) {
             if (i > 0) {
                 y += renderer.style.unit / 2;
             }
             const propHeight = prop.bounds.dimension.height;
-            prop.bounds = new Point(0, y).rect(width, propHeight);
-            prop.connector = prop.property.definition.type == PropertyType.INPUT ? prop.bounds.middleLeft() : prop.bounds.middleRight();
+            prop.setBounds(new Point(0, y).rect(width, propHeight));
             y += propHeight;
         }
         this.propertyViews
-            .filter(prop => prop.property.definition.type == PropertyType.OUTPUT)
-            .forEach((prop, i) => drawProperty(prop, i));
+            .filter(prop => isOutput(prop.property.definition.type))
+            .forEach((prop, i) => layoutProperty(prop, i));
 
         if (this.node.definition.preview) {
             this.previewOffset = y;
             y += width * this.getPreviewRatio();
         }
         this.propertyViews
-            .filter(prop => prop.property.definition.type == PropertyType.INPUT)
-            .forEach((prop, i) => drawProperty(prop, i));
+            .filter(prop => !isOutput(prop.property.definition.type))
+            .forEach((prop, i) => layoutProperty(prop, i));
 
         this.bounds = this.bounds.origin.rect(width, y + renderer.style.unit);
         this.labelBounds = this.bounds.withHeight(renderer.style.headerHeight);
@@ -239,7 +248,7 @@ export class NodeView implements FramableView, SelectableView {
         this.node.properties.filter(prop => prop.definition.linkable).forEach((prop, i) => {
             if (prop.definition.type == PropertyType.INPUT) {
                 numIn++;
-            } else {
+            } else if (prop.definition.type == PropertyType.OUTPUT) {
                 numOut++;
             }
         });
@@ -261,7 +270,7 @@ export class NodeView implements FramableView, SelectableView {
             if (prop.property.definition.type == PropertyType.INPUT) {
                 prop.connector = inCenter.offset(Math.cos(inAngle) * hiddenRadius, -Math.sin(inAngle) * hiddenRadius);
                 inAngle += inAngleStep;
-            } else {
+            } else if (prop.property.definition.type == PropertyType.OUTPUT) {
                 prop.connector = outCenter.offset(Math.cos(outAngle) * hiddenRadius, -Math.sin(outAngle) * hiddenRadius);
                 outAngle += outAngleStep;
             }
@@ -344,8 +353,9 @@ export class NodeView implements FramableView, SelectableView {
         renderer.drawText(this.collapseArrowCenter.offset(style.unit * 2.5, style.unit), rgb(renderer.theme.TEXT_COLOR), this.node.definition.label)
         
         this.propertyViews.forEach(prop => {
-            prop.drawConnector(renderer, this.bounds.origin);
-            
+            if (!isNewPort(prop.property.definition.type)) {
+                prop.drawConnector(renderer, this.bounds.origin);
+            }
         });
     }
     

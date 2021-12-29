@@ -319,6 +319,7 @@ export class GraphEditor implements Editor, CommandStackListener {
         this.nodeViews = this.nodeGroup.nodes.map(node => {
             const existingView = nodeMap.get(node);
             if (existingView) {
+                existingView.refreshProperties();
                 return existingView;
             }
             return new NodeView(node);

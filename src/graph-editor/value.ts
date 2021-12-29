@@ -5,6 +5,7 @@ export enum CommonValueType {
     BOOLEAN = "boolean",
     STRING = "string",
     ENUM = "enum",
+    LABEL = "label"
 }
 
 export interface Range {

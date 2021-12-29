@@ -1,6 +1,4 @@
-import { CommandStack } from "./command-stack";
-import { AddNodeCommand, ChangePropertyValueCommand, CreateConnectionCommand, DeleteNodesCommand, MoveNodeCommand, RemoveConnectionCommand, ResizeNodeCommand, ToggleCollapseCommand } from "./commands";
-import { Dimension, Point } from "./geometry";
+import { Point } from "./geometry";
 import { NodeDefinition, NodeFactory, NodeGroupIO, PropertyType } from "./nodes";
 
 const nodeDefinitions: NodeDefinition[] = [
