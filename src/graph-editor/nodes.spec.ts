@@ -1,5 +1,5 @@
 import { Point } from "./geometry";
-import { NodeDefinition, NodeFactory, NodeGroupIO, PropertyType } from "./nodes";
+import { DefaultNodeRegistry, NodeDefinition, NodeFactory, NodeGroupIO, PropertyType } from "./nodes";
 
 const nodeDefinitions: NodeDefinition[] = [
     {
@@ -39,7 +39,7 @@ const nodeDefinitions: NodeDefinition[] = [
         ]
     }
 ];
-const nodeFactory = new NodeFactory(nodeDefinitions);
+const nodeFactory = new NodeFactory(new DefaultNodeRegistry(nodeDefinitions));
 
 describe("NodeFactory", () => {
 

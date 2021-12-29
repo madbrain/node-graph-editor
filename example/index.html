@@ -24,7 +24,7 @@
     <script>
       // Create and customize editor
       const graphicalHelper = new nodeGraphUi.GeglGraphicalHelper();
-      const nodeFactory = new nodeGraphUi.NodeFactory(nodeGraphUi.geglNodeDefinitions);
+      const nodeFactory = new nodeGraphUi.NodeFactory(new nodeGraphUi.DefaultNodeRegistry(nodeGraphUi.geglNodeDefinitions));
       
       const editor = new nodeGraphUi.GraphEditor({
         container: document.querySelector("#container"),

@@ -300,7 +300,7 @@ class LoadContext {
     nodes: Node[] = [];
     frames: NodeFrame[] = [];
 
-    constructor(private nodeDefinitionByType: { [key: string]: NodeDefinition } ) {}
+    constructor(private nodeRegistry: NodeRegistry) {}
     
     load(nodeGroupIO: NodeGroupIO) {
         nodeGroupIO.nodes.forEach(n => this.loadFramable(n, null));
@@ -315,7 +315,7 @@ class LoadContext {
             }
             return frame;
         } else {
-            const node = new Node(n.id, this.nodeDefinitionByType[n.type], new Point(n.location.x, n.location.y));
+            const node = new Node(n.id, this.nodeRegistry.lookup(n.type), new Point(n.location.x, n.location.y));
             node.collapsed = n.collapsed || false;
             node.fullWidth = n.fullWidth || 0;
             if (n.properties) {
@@ -408,7 +408,12 @@ function newId() {
     return result;
 }
 
-export class NodeFactory {
+export interface NodeRegistry {
+    all(): NodeDefinition[];
+    lookup(type: string): NodeDefinition;
+}
+
+export class DefaultNodeRegistry implements NodeRegistry {
     private nodeDefinitionByType: { [key: string]: NodeDefinition } = {};
 
     constructor (private nodeDefinitions: NodeDefinition[]) {
@@ -417,12 +422,24 @@ export class NodeFactory {
         });
     }
 
-    getNodeDefinitions() {
+    lookup(type: string): NodeDefinition {
+        return this.nodeDefinitionByType[type];
+    }
+
+    all() {
         return this.nodeDefinitions;
+    }
+}
+
+export class NodeFactory {
+    constructor (private nodeRegistry: NodeRegistry) { }
+
+    getNodeDefinitions() {
+        return this.nodeRegistry.all();
     }
 
     createNode(type: string, location: Point): Node {
-        const nodeDefinition = this.nodeDefinitionByType[type];
+        const nodeDefinition = this.nodeRegistry.lookup(type);
         if (! nodeDefinition) {
             throw new Error(`unknown node type ${type}`);
         }
@@ -430,7 +447,7 @@ export class NodeFactory {
     }
 
     load(nodeGroupIO: NodeGroupIO): NodeGroup {
-        const context = new LoadContext(this.nodeDefinitionByType);
+        const context = new LoadContext(this.nodeRegistry);
         context.load(nodeGroupIO);
         nodeGroupIO.connections.forEach(connection => {
             const fromProp = context.nodeMap.get(connection.from.node).findPropertyFromPath(connection.from.property);
