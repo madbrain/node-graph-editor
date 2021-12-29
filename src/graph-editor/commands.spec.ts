@@ -1,7 +1,7 @@
 import { CommandStack } from "./command-stack";
 import { AddNodeCommand, ChangePropertyValueCommand, CreateConnectionCommand, DeleteNodesCommand, MoveNodeCommand, RemoveConnectionCommand, ResizeNodeCommand, ToggleCollapseCommand } from "./commands";
 import { Dimension, Point } from "./geometry";
-import { NodeDefinition, NodeFactory, PropertyType } from "./nodes";
+import { DefaultNodeRegistry, NodeDefinition, NodeFactory, PropertyType } from "./nodes";
 
 const nodeDefinitions: NodeDefinition[] = [
     {
@@ -23,7 +23,7 @@ const nodeDefinitions: NodeDefinition[] = [
         ]
     }
 ];
-const nodeFactory = new NodeFactory(nodeDefinitions);
+const nodeFactory = new NodeFactory(new DefaultNodeRegistry(nodeDefinitions));
 
 describe("Node", () => {
 
