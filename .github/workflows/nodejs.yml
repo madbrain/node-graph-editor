@@ -35,6 +35,10 @@ jobs:
       with:
         node-version: 14.x
     - run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
+    - uses: actions/cache@v2
+      with:
+        path: '**/node_modules'
+        key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
     - run: npm ci
     - run: npm run build
     - name: "version bump"
