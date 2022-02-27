@@ -152,7 +152,7 @@ export class GraphEditor implements Editor, CommandStackListener {
             return this.state;
         });
         this.registerAction("create-node", () => {
-            const selector = this.openSelector(this.mousePosition, 'select-tree', {
+            const selector = this.openSelectorOnScreen(this.mousePosition, 'select-tree', {
                 nodes: buildTreeFromDefinitions(this.nodeFactory.getNodeDefinitions()),
             });
             selector.result.then(nodeDef => {
@@ -483,6 +483,10 @@ export class GraphEditor implements Editor, CommandStackListener {
 
     openSelector(position: Point, type: string, context: any): SelectorResult {
         const screenPosition = this.getScreenPosition(position);
+        return this.openSelectorOnScreen(screenPosition, type, context);
+    }
+
+    private openSelectorOnScreen(screenPosition: Point, type: string, context: any) {
         const selector = this.selectors.get(type);
         const result = selector ? selector.open(screenPosition, context) : null;
         if (result) {
